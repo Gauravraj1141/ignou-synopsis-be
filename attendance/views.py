@@ -1,7 +1,8 @@
+from django.forms import ValidationError
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import  UserSerializer, RegisterSerializer, GetUserListSerializer
+from .serializers import  UserSerializer, RegisterSerializer, GetUserListSerializer, UpdateUserStatusSerializer
 from .models import CustomUser
 from django.utils import timezone
 from datetime import date
@@ -34,29 +35,37 @@ class GetUserList(generics.ListAPIView):
         return CustomUser.objects.all().order_by('-date_joined')
 
 
-# class MarkAttendanceView(APIView):
-#     """
-#     Placeholder endpoint for marking attendance via face recognition.
-#     Expected payload: { "embedding": [float,...] }
-#     Real face-matching logic to be implemented: compare incoming embedding with stored embeddings
-#     """
-#     permission_classes = [permissions.IsAuthenticated]
 
-#     def post(self, request):
-#         user = request.user
-#         today = date.today()
-#         attendance, created = Attendance.objects.get_or_create(user=user, date=today)
-#         attendance.status = 'present'
-#         attendance.save()
-#         return Response({'status': 'marked', 'date': str(today)})
 
-# class AttendanceReportView(generics.ListAPIView):
-#     permission_classes = [permissions.IsAuthenticated]
-#     serializer_class = AttendanceSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
-#     def get_queryset(self):
-#         # For admins return all, else filter by user
-#         user = self.request.user
-#         if user.is_staff:
-#             return Attendance.objects.all().order_by('-date')
-#         return Attendance.objects.filter(user=user).order_by('-date')
+
+class UpdateUserStatusAPIView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def put(self, request):
+        serializer = UpdateUserStatusSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user_id = serializer.validated_data["user_id"]
+            new_status = serializer.validated_data["status"]
+
+            try:
+                user = CustomUser.objects.get(user_id=user_id)
+            except CustomUser.DoesNotExist:
+                return Response(
+                    {"error": "User not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            user.status = new_status
+            user.save()
+
+            return Response(
+                {"message": "Status updated successfully"},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
