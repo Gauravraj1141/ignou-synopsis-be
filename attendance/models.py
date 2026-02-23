@@ -18,14 +18,14 @@ class CustomUser(AbstractUser):
         return self.get_username()
     
 
-# class FaceEmbedding(models.Model):
-#     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='embeddings')
-#     phone_number = models.CharField(max_length=20, blank=True, null=True)       
-#     embedding = models.JSONField()
-#     created_at = models.DateTimeField(auto_now_add=True)
+class FaceEmbedding(models.Model):
+    face_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    embedding_data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return f"Embedding for {self.user.username} ({self.id})"
+    def __str__(self):
+        return f"Embedding for {self.user.name}"
 
 # class Attendance(models.Model):
 #     STATUS_CHOICES = (
