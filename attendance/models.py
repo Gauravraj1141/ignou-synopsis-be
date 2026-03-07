@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True,db_index=True,)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER,)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE,)
+    is_registered = models.BooleanField(default=False)
 
     def __str__(self):
         return self.get_username()
@@ -25,21 +26,22 @@ class FaceEmbedding(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Embedding for {self.user.name}"
+        return f"Embedding for {self.user.first_name}"
 
-# class Attendance(models.Model):
-#     STATUS_CHOICES = (
-#         ('present', 'Present'),
-#         ('absent', 'Absent'),
-#         ('late', 'Late'),
-#     )
-#     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='attendance')
-#     date = models.DateField()
-#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
-#     timestamp = models.DateTimeField(auto_now_add=True)
+class Attendance(models.Model):
+    STATUS_CHOICES = (
+        ('present', 'Present'),
+        ('absent', 'Absent'),
+    )
 
-#     class Meta:
-#         unique_together = ('user', 'date')
 
-#     def __str__(self):
-#         return f"{self.user.username} - {self.date} - {self.status}"
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='attendance')
+    date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"{self.user.first_name} - {self.date} - {self.status}"
