@@ -11,5 +11,7 @@ urlpatterns = [
     path('register-face/', views.RegisterFaceAPIView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('mark-attendance/', views.MarkAttendanceApiView.as_view()),
-    
+    path('attendance/report/', views.AttendanceReportAPIView.as_view()),
+    path('admin/attendance/', views.AdminAttendanceReportAPIView.as_view()),
+    path('users/<uuid:user_id>/delete/', views.DeleteUserAPIView.as_view()),
 ]

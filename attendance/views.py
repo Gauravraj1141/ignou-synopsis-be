@@ -145,4 +145,53 @@ class MarkAttendanceApiView(APIView):
                 return Response({"message": "Attandance Marked successfully"})
             
         return Response({"error": "Face verification failed. Please ensure you are the registered user."}, status=400)
-            
+
+
+class AttendanceReportAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.user.user_id
+        records = Attendance.objects.filter(user_id=user_id).order_by('-date')
+        data = [
+            {
+                "id": r.pk,
+                "date": str(r.date),
+                "status": r.status,
+                "timestamp": r.timestamp.isoformat()
+            }
+            for r in records
+        ]
+        return Response(data)
+
+
+class DeleteUserAPIView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def delete(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(user_id=user_id)
+            user.delete()
+            return Response({"message": "User deleted successfully"}, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AdminAttendanceReportAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        records = Attendance.objects.select_related('user').order_by('-date', '-timestamp')
+        data = [
+            {
+                "id": r.pk,
+                "user_id": str(r.user.user_id),
+                "name": f"{r.user.first_name} {r.user.last_name}".strip() or r.user.username,
+                "email": r.user.email,
+                "date": str(r.date),
+                "status": r.status,
+                "timestamp": r.timestamp.isoformat()
+            }
+            for r in records
+        ]
+        return Response(data)
